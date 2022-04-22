@@ -1,0 +1,50 @@
+# Webscraping 
+!pip install yfinance
+!pip install bs4
+
+import yfinance as yf
+import pandas as pd
+# beautifulsoup
+import requests
+from bs4 import BeautifulSoup
+# plotly
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+********************
+# Use yfinance to Extract Stock Data
+
+# create a ticker object
+Tesla = yf.Ticker('TSLA')
+
+# create history function to extract stock information
+tesla_data = Tesla.history(period = "max")
+
+# reset the index
+tesla_data.reset_index(inplace = True)
+tesla_data.head()
+
+# Use Webscraping to Extract Tesla Revenue Data
+
+url = "https://www.macrotrends.net/stocks/charts/TSLA/tesla/revenue"
+html_data = requests.get(url).text
+
+#Parse the html data using beautiful_soup
+soup = BeautifulSoup(html_data, "html.parser")
+soup.find_all('title')
+
+# to get dataframe from webscraping
+
+tesla_revenue = pd.DataFrame(columns = ['Date', 'Revenue'])
+                                        
+for row in soup.find_all('tbody')[1].find_all('tr'):
+    col = row.find_all("td")
+    date = col[0].text                                     
+    revenue = col[1].text.replace("$", "").replace(",", "") 
+                                        
+    tesla_revenue = tesla_revenue.append({"Date": date, "Revenue": revenue}, ignore_index = True)   
+                                          
+tesla_revenue.dropna(inplace = True)
+tesla_revenue = tesla_revenue[tesla_revenue['Revenue'] != ""] 
+
+tesla_revenue.tail()  
